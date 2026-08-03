@@ -1,0 +1,36 @@
+name: Publish KAIRI JIM DIAMOND v0.11.2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-v0.11.2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download and verify customer installer
+        shell: bash
+        env:
+          INSTALLER_URL: "https://sdmntprwestus2.oaiusercontent.com/files/00000000-7f68-81f8-8478-a71035e51ff7/raw?se=2026-08-03T11:11:09Z&sp=r&sv=2026-02-06&sr=b&scid=9255456c-d1c0-5611-a49c-3043490fffc9&skoid=8cb40e9f-389f-4cf6-afaa-e5bd4c7fd98c&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-03T02:00:16Z&ske=2026-08-04T02:00:16Z&sks=b&skv=2026-02-06&sig=PmWnbRevUeZcFuDSzWiPnLs63rwqdQHykpTjoFFcV8w%3D"
+        run: |
+          curl --location --fail --retry 3 "$INSTALLER_URL" --output installer-artifact.zip
+          unzip -q installer-artifact.zip
+          test -f KAIRI-JIM-DIAMOND-v0.11.2-Setup.exe
+          echo "138f21072493828e4981be390d2822c8f4313ce28b3fbe555e04a5bc2ab64513  KAIRI-JIM-DIAMOND-v0.11.2-Setup.exe" | sha256sum --check
+
+      - name: Create public GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.11.2 \
+            KAIRI-JIM-DIAMOND-v0.11.2-Setup.exe \
+            --repo "${{ github.repository }}" \
+            --title "KAIRI JIM DIAMOND v0.11.2" \
+            --notes "Verified customer-only Windows installer. SHA-256: 138f21072493828e4981be390d2822c8f4313ce28b3fbe555e04a5bc2ab64513"
